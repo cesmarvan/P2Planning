@@ -1,0 +1,54 @@
+/* src/index.css */
+
+/* Estilo global básico para la aplicación */
+body {
+  font-family: Arial, sans-serif; /* Fuente simple y común */
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4; /* Color de fondo suave */
+  color: #333; /* Color de texto predeterminado */
+}
+
+/* Asegúrate de que el contenido esté centrado */
+.App {
+  text-align: center; /* Centra el texto */
+  padding: 20px; /* Agrega un poco de espacio alrededor */
+}
+
+/* Estilos básicos para los elementos del calendario */
+h1 {
+  color: #241818; /* Color azul para el encabezado */
+  margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: none; /* Elimina los puntos de la lista */
+  padding: 0;
+}
+
+li {
+  background-color: #ffffff; /* Fondo blanco para los elementos de la lista */
+  margin: 10px 0; /* Espacio entre elementos */
+  padding: 10px;
+  border-radius: 5px; /* Bordes redondeados */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+li:hover {
+  background-color: #e9ecef; /* Color de fondo al pasar el ratón */
+}
+
+/* Estilo de botones básicos */
+button {
+  background-color: #007bff; /* Fondo azul */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3; /* Fondo azul más oscuro al pasar el ratón */
+}
+/* Fin de src/index.css */
