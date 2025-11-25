@@ -34,12 +34,14 @@ function App({ ditto }) {
   }, [ditto]);
 
   const [selectedCalendar, setSelectedCalendar] = useState(null);
+  const [showNewCalendar, setShowNewCalendar] = useState(false);
+  const [newCalendarName, setNewCalendarName] = useState("");
 
   if (selectedCalendar) {
     return (
       <div>
         <button onClick={() => setSelectedCalendar(null)}>← Volver</button>
-        <CalendarDetail calendar={selectedCalendar} />
+        <CalendarDetail calendar={selectedCalendar} ditto={ditto} />
       </div>
     );
   }
@@ -48,6 +50,38 @@ function App({ ditto }) {
   return (
     <div>
       <h1>Calendarios disponibles</h1>
+      <div style={{ marginBottom: 12 }}>
+        {!showNewCalendar ? (
+          <button onClick={() => setShowNewCalendar(true)}>＋ Nuevo calendario</button>
+        ) : (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!newCalendarName) return;
+              const id = `cal-${Date.now()}`;
+              try {
+                await ditto.store.collection("calendars").upsert({
+                  _id: id,
+                  name: newCalendarName,
+                  events: []
+                });
+                setNewCalendarName("");
+                setShowNewCalendar(false);
+              } catch (err) {
+                console.error("Failed to create calendar:", err);
+              }
+            }}
+          >
+            <input
+              placeholder="Nombre del calendario"
+              value={newCalendarName}
+              onChange={(e) => setNewCalendarName(e.target.value)}
+            />
+            <button type="submit">Crear</button>
+            <button type="button" onClick={() => setShowNewCalendar(false)}>Cancelar</button>
+          </form>
+        )}
+      </div>
       {calendars.map((c) => (
         <div
           key={c._id}

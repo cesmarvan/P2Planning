@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 
-function CalendarView({ calendar }) {
+function CalendarView({ calendar, ditto }) {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(null);
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [newEventTitle, setNewEventTitle] = useState("");
+  const [newEventDate, setNewEventDate] = useState("");
 
   // Crear una cuadrícula con los meses del calendario
   const months = [
@@ -39,13 +42,22 @@ function CalendarView({ calendar }) {
           monthName={months[selectedMonthIndex]}
           events={calendar.events || []}
           onBack={() => setSelectedMonthIndex(null)}
+          // pass add event controls
+          showAddEvent={showAddEvent}
+          setShowAddEvent={setShowAddEvent}
+          newEventTitle={newEventTitle}
+          setNewEventTitle={setNewEventTitle}
+          newEventDate={newEventDate}
+          setNewEventDate={setNewEventDate}
+          calendar={calendar}
+          ditto={ditto}
         />
       )}
     </div>
   );
 }
 
-function MonthView({ monthIndex, monthName, events, onBack }) {
+function MonthView({ monthIndex, monthName, events, onBack, showAddEvent, setShowAddEvent, newEventTitle, setNewEventTitle, newEventDate, setNewEventDate, calendar, ditto }) {
   // Use current year for days calculation
   const year = new Date().getFullYear();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -68,7 +80,49 @@ function MonthView({ monthIndex, monthName, events, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack}>← Volver a meses</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button onClick={onBack}>← Volver a meses</button>
+        <button onClick={() => {
+          // default date to first of month if empty
+          if (!newEventDate) {
+            const mm = String(monthIndex + 1).padStart(2, '0');
+            setNewEventDate(`${year}-${mm}-01`);
+          }
+          setShowAddEvent(prev => !prev)
+        }}>{showAddEvent ? 'Cancelar' : '＋ Añadir evento'}</button>
+      </div>
+      {showAddEvent && (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!newEventTitle || !newEventDate) return;
+
+            try {
+              // build new events array
+              const existing = calendar;
+              const newEvents = [...(existing.events || []), { title: newEventTitle, date: newEventDate }];
+
+              await ditto.store.collection('calendars').upsert({
+                _id: existing._id,
+                name: existing.name,
+                events: newEvents
+              });
+
+              // clear form
+              setNewEventTitle('');
+              setNewEventDate('');
+              setShowAddEvent(false);
+            } catch (err) {
+              console.error('Failed to add event from detail view:', err);
+            }
+          }}
+          style={{ marginTop: 8, marginBottom: 12 }}
+        >
+          <input placeholder='Título del evento' value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} />
+          <input type='date' value={newEventDate} onChange={e => setNewEventDate(e.target.value)} />
+          <button type='submit'>Guardar evento</button>
+        </form>
+      )}
       <h3>{monthName} — Eventos</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
