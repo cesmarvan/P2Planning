@@ -1,103 +1,134 @@
 import React, { useEffect, useState } from "react";
-import CalendarDetail from "./components/CalendarDetail";
+import Calendar from "./components/Calendar";
 
 function App({ ditto }) {
   const [calendars, setCalendars] = useState([]);
-  const [eventInputs, setEventInputs] = useState({});
+
+  console.log("App rendered, ditto:", ditto ? "present" : "missing");
+  console.log("Current calendars state:", calendars);
 
   useEffect(() => {
-    if (!ditto) return;
+    if (!ditto) {
+      console.log("Ditto not ready, skipping setup");
+      return;
+    }
 
-    // Observamos la colección "calendars"
-    const observer = ditto.store
-      .collection("calendars")
-      .findAll()
-      .observeLocal((docs) => {
-        setCalendars(docs.map(d => d.value));
-      });
+    console.log("Setting up observation for calendars with Cloud sync...");
 
-    // Si no hay calendarios, añadimos uno
-    (async () => {
-      const existing = await ditto.store.collection("calendars").findAll().exec();
+    // Registrar subscripción de sync para recibir actualizaciones de otros peers
+    ditto.sync.registerSubscription(`SELECT * FROM calendars`);
 
-      if (existing.length === 0) {
-        await ditto.store.collection("calendars").upsert({
-          _id: "cal1",
-          name: "Example Calendar",
-          events: [{ id: 'e1', title: 'Evento de ejemplo', date: '2025-06-15' }],
-        });
+    // Observar cambios locales en calendarios
+    const calObserver = ditto.store.registerObserver(
+      `SELECT * FROM calendars`,
+      (result) => {
+        console.log("Calendar observer - Calendars changed:", result.items.length, "documents");
+        // Extraer valores de los items
+        const calendarData = result.items.map(item => item.value);
+        console.log("Extracted calendar data:", calendarData);
+        setCalendars(calendarData);
       }
-              console.log(existing)
+    );
+
+    // Cargar/crear calendario inicial
+    (async () => {
+      try {
+        const existing = await ditto.store.collection("calendars").findAll().exec();
+        console.log("Existing calendars on mount:", existing.length);
+
+        if (existing.length === 0) {
+          console.log("Creating initial calendar...");
+          await ditto.store.collection("calendars").upsert({
+            _id: "cal1",
+            name: "Example calendar"
+          });
+          console.log("Initial calendar created");
+        }
+      } catch (err) {
+        console.error("Error checking/creating initial calendar:", err);
+      }
     })();
 
-    return () => observer.stop();
+    return () => {
+      console.log("Stopping observer");
+      calObserver?.stop?.();
+    };
   }, [ditto]);
 
   const [selectedCalendar, setSelectedCalendar] = useState(null);
   const [showNewCalendar, setShowNewCalendar] = useState(false);
   const [newCalendarName, setNewCalendarName] = useState("");
 
-  if (selectedCalendar) {
+  const activeCalendar = selectedCalendar
+    ? calendars.find((c) => c._id === selectedCalendar._id) || selectedCalendar
+    : null;
+
+  if (activeCalendar) {
     return (
-      <div>
-        <button onClick={() => setSelectedCalendar(null)}>← Volver</button>
-        <CalendarDetail calendar={selectedCalendar} ditto={ditto} />
-      </div>
+      <Calendar 
+        calendar={activeCalendar} 
+        ditto={ditto} 
+        onBack={() => setSelectedCalendar(null)}
+      />
     );
   }
   
 
   return (
     <div>
-      <h1>Calendarios disponibles</h1>
+      <h1>Available Calendars</h1>
       <div style={{ marginBottom: 12 }}>
         {!showNewCalendar ? (
-          <button onClick={() => setShowNewCalendar(true)}>＋ Nuevo calendario</button>
+          <button onClick={() => setShowNewCalendar(true)}>＋ New Calendar</button>
         ) : (
           <form
             onSubmit={async (e) => {
               e.preventDefault();
               if (!newCalendarName) return;
               const id = `cal-${Date.now()}`;
+              console.log("Creating new calendar with ID:", id, "name:", newCalendarName);
               try {
                 await ditto.store.collection("calendars").upsert({
                   _id: id,
-                  name: newCalendarName,
-                  events: []
+                  name: newCalendarName
                 });
+                console.log("Calendar created successfully");
                 setNewCalendarName("");
                 setShowNewCalendar(false);
               } catch (err) {
-                console.error("Failed to create calendar:", err);
+                console.error("Error creating calendar:", err);
+                alert("Error creating calendar: " + err.message);
               }
             }}
           >
             <input
-              placeholder="Nombre del calendario"
+              placeholder="Calendar name"
               value={newCalendarName}
               onChange={(e) => setNewCalendarName(e.target.value)}
             />
-            <button type="submit">Crear</button>
-            <button type="button" onClick={() => setShowNewCalendar(false)}>Cancelar</button>
+            <button type="submit">Create</button>
+            <button type="button" onClick={() => setShowNewCalendar(false)}>Cancel</button>
           </form>
         )}
       </div>
       {calendars.map((c) => (
         <div
           key={c._id}
-          style={{ border: "1px solid #ddd", padding: 8, margin: 8, cursor: "pointer" }}
+          style={{
+            border: "1px solid #ddd",
+            padding: 12,
+            margin: 8,
+            cursor: "pointer",
+            borderRadius: 4,
+            backgroundColor: '#f9f9f9',
+            transition: 'background-color 0.3s'
+          }}
           onClick={() => setSelectedCalendar(c)}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
         >
-          <h3>{c.name}</h3>
-          <div>
-            <strong>Eventos:</strong>
-            <ul>
-              {(c.events || []).slice(0, 5).map((e, i) => (
-                <li key={i}>{e.title} {e.date ? `— ${e.date}` : ""}</li>
-              ))}
-              {((c.events || []).length > 5) && <li>...y { (c.events || []).length - 5 } más</li>}
-            </ul>
-          </div>
+          <h3 style={{ margin: '0 0 8px 0' }}>{c.name}</h3>
+          <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Click to view details</p>
         </div>
       ))}
     </div>
