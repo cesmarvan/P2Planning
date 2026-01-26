@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import { AiTwotoneEdit, AiTwotoneDelete, AiOutlineCheck, AiOutlineClose} from 'react-icons/ai';
 function EventManager({ calendar, ditto }) {
   const [events, setEvents] = useState([]);
   const [showAddEvent, setShowAddEvent] = useState(false);
@@ -85,15 +85,15 @@ function EventManager({ calendar, ditto }) {
   };
 
   return (
-    <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f9f9f9', borderRadius: 8 }}>
+    <div style={{ marginTop: 20, padding: 16, backgroundColor: '#141a26', borderRadius: 12, border: '1px solid #2a3344', color: '#e5e7eb' }}>
       <h3>Events Manager</h3>
       
       {/* Formulario para agregar evento */}
       <div style={{ marginBottom: 16 }}>
         {!showAddEvent ? (
           <button 
+            className="button-54"
             onClick={() => setShowAddEvent(true)}
-            style={{ padding: 8, cursor: 'pointer', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: 4 }}
           >
             ＋ Add Event
           </button>
@@ -105,31 +105,31 @@ function EventManager({ calendar, ditto }) {
               value={newEventTitle}
               onChange={(e) => setNewEventTitle(e.target.value)}
               required
-              style={{ flex: 1, minWidth: 150, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              style={{ flex: 1, minWidth: 150 }}
             />
             <input
               type="date"
               value={newEventDate}
               onChange={(e) => setNewEventDate(e.target.value)}
               required
-              style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              style={{}}
             />
             <button 
+              className="button-54"
               type="submit"
-              style={{ padding: 8, cursor: 'pointer', backgroundColor: '#2196F3', color: 'white', border: 'none', borderRadius: 4 }}
             >
-              Save
+            <AiOutlineCheck />
             </button>
             <button
+              className="button-54"
               type="button"
               onClick={() => {
                 setShowAddEvent(false);
                 setNewEventTitle('');
                 setNewEventDate('');
               }}
-              style={{ padding: 8, cursor: 'pointer', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: 4 }}
             >
-              Cancel
+              <AiOutlineClose />
             </button>
           </form>
         )}
@@ -148,33 +148,26 @@ function EventManager({ calendar, ditto }) {
                 style={{
                   padding: 12,
                   marginBottom: 8,
-                  backgroundColor: '#fff',
-                  border: '1px solid #ddd',
-                  borderRadius: 4,
+                  backgroundColor: '#0f1522',
+                  border: '1px solid #2a3344',
+                  borderRadius: 10,
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  color: '#e5e7eb'
                 }}
               >
                 <div>
                   <strong>{event.title}</strong>
-                  <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                  <div style={{ fontSize: 12, color: '#9aa4b2', marginTop: 4 }}>
                     📅 {event.date || 'No date'}
                   </div>
                 </div>
                 <button
+                  className="button-54"
                   onClick={() => handleDeleteEvent(event._id)}
-                  style={{
-                    padding: 6,
-                    cursor: 'pointer',
-                    backgroundColor: '#f44336',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 4,
-                    fontSize: 12
-                  }}
                 >
-                  Delete
+                  <AiTwotoneDelete />
                 </button>
               </li>
             ))}

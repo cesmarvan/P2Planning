@@ -37,11 +37,10 @@ function CalendarView({ calendar, ditto }) {
 
   return (
     <div>
-      <h2>{calendar.name}</h2>
+      <h2 style={{ color: '#f3f4f6', marginTop: 0 }}>{calendar.name}</h2>
       {selectedMonthIndex === null ? (
         <div>
-          <h3>Select a month</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
             {months.map((month, index) => (
               <div
                 key={index}
@@ -49,9 +48,22 @@ function CalendarView({ calendar, ditto }) {
                 style={{
                   padding: '20px',
                   cursor: 'pointer',
-                  border: '1px solid #ccc',
+                  border: '1px solid #2a3344',
                   textAlign: 'center',
-                  backgroundColor: '#f0f0f0'
+                  backgroundColor: '#141a26',
+                  color: '#3b4a66',
+                  borderRadius: 12,
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#3b4a66';
+                  e.currentTarget.style.boxShadow = '0 10px 24px rgba(0, 0, 0, 0.35)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#2a3344';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'none';
                 }}
               >
                 {month}
@@ -85,12 +97,12 @@ function MonthView({ monthIndex, monthName, events, onBack, showAddEvent, setSho
   const year = new Date().getFullYear();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
-  // Map events to day numbers for this month
+  // Map events to day numbers for this month and year
   const eventsInMonth = (events || []).filter(e => {
     if (!e || !e.date) return false;
     const d = new Date(e.date);
     if (isNaN(d)) return false;
-    return d.getMonth() === monthIndex;
+    return d.getMonth() === monthIndex && d.getFullYear() === year;
   });
 
   const eventsByDay = {};
@@ -104,8 +116,8 @@ function MonthView({ monthIndex, monthName, events, onBack, showAddEvent, setSho
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <button onClick={onBack}>← Back to months</button>
-        <button onClick={() => {
+        <button className="button-54" onClick={onBack}>← Back to months</button>
+        <button className="button-54" onClick={() => {
           // default date to first of month if empty
           if (!newEventDate) {
             const mm = String(monthIndex + 1).padStart(2, '0');
@@ -141,14 +153,14 @@ function MonthView({ monthIndex, monthName, events, onBack, showAddEvent, setSho
               alert("Error creating event: " + err.message);
             }
           }}
-          style={{ marginTop: 8, marginBottom: 12 }}
+          style={{ marginTop: 12, marginBottom: 12 }}
         >
           <input placeholder='Title of the event' value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} />
           <input type='date' value={newEventDate} onChange={e => setNewEventDate(e.target.value)} />
-          <button type='submit'>Save event</button>
+          <button className="button-54" type='submit'>Save event</button>
         </form>
       )}
-      <h3>{monthName} — Events</h3>
+      <h3 style={{ color: '#cbd5f5' }}>{monthName} — Events</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
           <div
@@ -156,14 +168,16 @@ function MonthView({ monthIndex, monthName, events, onBack, showAddEvent, setSho
             style={{
               minHeight: 80,
               padding: '6px',
-              border: '1px solid #ccc',
-              backgroundColor: '#fff'
+              border: '1px solid #2a3344',
+              backgroundColor: '#0f1522',
+              color: '#e5e7eb',
+              borderRadius: 10
             }}
           >
-            <div style={{ fontWeight: 'bold' }}>{day}</div>
+            <div style={{ fontWeight: 'bold', color: '#f3f4f6' }}>{day}</div>
             <div style={{ marginTop: 6 }}>
               {(eventsByDay[day] || []).map((ev, idx) => (
-                <div key={idx} style={{ fontSize: 12, marginBottom: 4 }}>
+                <div key={idx} style={{ fontSize: 12, marginBottom: 4, color: '#cbd5f5' }}>
                   • {ev.title}{ev.date ? ` (${ev.date})` : ''}
                 </div>
               ))}
@@ -171,7 +185,7 @@ function MonthView({ monthIndex, monthName, events, onBack, showAddEvent, setSho
           </div>
         ))}
       </div>
-      {eventsInMonth.length === 0 && <p>No events in this month.</p>}
+      {eventsInMonth.length === 0 && <p style={{ color: '#9aa4b2' }}>No events in this month.</p>}
     </div>
   );
 }

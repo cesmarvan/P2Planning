@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Calendar from "./components/Calendar";
+import "./App.css";
+
+import { AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
 
 function App({ ditto }) {
   const [calendars, setCalendars] = useState([]);
@@ -58,6 +61,18 @@ function App({ ditto }) {
   const [selectedCalendar, setSelectedCalendar] = useState(null);
   const [showNewCalendar, setShowNewCalendar] = useState(false);
   const [newCalendarName, setNewCalendarName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 12;
+
+  const totalPages = Math.max(1, Math.ceil(calendars.length / pageSize));
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleCalendars = calendars.slice(pageStart, pageStart + pageSize);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const activeCalendar = selectedCalendar
     ? calendars.find((c) => c._id === selectedCalendar._id) || selectedCalendar
@@ -75,62 +90,75 @@ function App({ ditto }) {
   
 
   return (
-    <div>
-      <h1>Available Calendars</h1>
-      <div style={{ marginBottom: 12 }}>
-        {!showNewCalendar ? (
-          <button onClick={() => setShowNewCalendar(true)}>＋ New Calendar</button>
-        ) : (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (!newCalendarName) return;
-              const id = `cal-${Date.now()}`;
-              console.log("Creating new calendar with ID:", id, "name:", newCalendarName);
-              try {
-                await ditto.store.collection("calendars").upsert({
-                  _id: id,
-                  name: newCalendarName
-                });
-                console.log("Calendar created successfully");
-                setNewCalendarName("");
-                setShowNewCalendar(false);
-              } catch (err) {
-                console.error("Error creating calendar:", err);
-                alert("Error creating calendar: " + err.message);
-              }
-            }}
-          >
-            <input
-              placeholder="Calendar name"
-              value={newCalendarName}
-              onChange={(e) => setNewCalendarName(e.target.value)}
-            />
-            <button type="submit">Create</button>
-            <button type="button" onClick={() => setShowNewCalendar(false)}>Cancel</button>
-          </form>
-        )}
+    <div className="app-page">
+      <div className="app-header">
+        <h1 className="app-title">P2Planning</h1>
       </div>
-      {calendars.map((c) => (
-        <div
-          key={c._id}
-          style={{
-            border: "1px solid #ddd",
-            padding: 12,
-            margin: 8,
-            cursor: "pointer",
-            borderRadius: 4,
-            backgroundColor: '#f9f9f9',
-            transition: 'background-color 0.3s'
-          }}
-          onClick={() => setSelectedCalendar(c)}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-        >
-          <h3 style={{ margin: '0 0 8px 0' }}>{c.name}</h3>
-          <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Click to view details</p>
+
+      <div className="calendar-toolbar">
+        <div className="new-calendar-area">
+          {!showNewCalendar ? (
+            <button className="button-54" onClick={() => setShowNewCalendar(true)}>New Calendar</button>
+          ) : (
+            <form
+              className="new-calendar-form"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newCalendarName) return;
+                const id = `cal-${Date.now()}`;
+                console.log("Creating new calendar with ID:", id, "name:", newCalendarName);
+                try {
+                  await ditto.store.collection("calendars").upsert({
+                    _id: id,
+                    name: newCalendarName
+                  });
+                  console.log("Calendar created successfully");
+                  setNewCalendarName("");
+                  setShowNewCalendar(false);
+                } catch (err) {
+                  console.error("Error creating calendar:", err);
+                  alert("Error creating calendar: " + err.message);
+                }
+              }}
+            >
+              <input
+                placeholder="Calendar name"
+                value={newCalendarName}
+                onChange={(e) => setNewCalendarName(e.target.value)}
+              />
+              <button className="button-54" type="submit"><AiOutlineCheck /></button>
+              <button className="button-54" type="button" onClick={() => setShowNewCalendar(false)}><AiOutlineClose /></button>
+            </form>
+          )}
         </div>
-      ))}
+      </div>
+
+      <div className="calendar-grid">
+        {visibleCalendars.map((c) => (
+          <div
+            key={c._id}
+            className="calendar-card"
+            onClick={() => setSelectedCalendar(c)}
+          >
+            <div>
+              <h3 className="calendar-card-title">{c.name}</h3>
+              <p className="calendar-card-subtitle">Open calendar</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {calendars.length > pageSize && (
+        <div className="pagination">
+          <button className="button-54" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+            ← Prev
+          </button>
+          <span className="pagination-info">Page {currentPage} of {totalPages}</span>
+          <button className="button-54" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

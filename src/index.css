@@ -1,24 +1,29 @@
 /* src/index.css */
 
 /* Estilo global básico para la aplicación */
+html, body, #root {
+  height: 100%;
+  background-color: #0b0f17;
+}
+
 body {
-  font-family: Arial, sans-serif; /* Fuente simple y común */
+  font-family: system-ui;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4; /* Color de fondo suave */
-  color: #333; /* Color de texto predeterminado */
+  background-color: #0b0f17;
+  color: #0b0f17;
 }
 
 /* Asegúrate de que el contenido esté centrado */
 .App {
-  text-align: center; /* Centra el texto */
-  padding: 20px; /* Agrega un poco de espacio alrededor */
+  text-align: center;
+  padding: 20px;
 }
 
 /* Estilos básicos para los elementos del calendario */
 h1 {
-  color: #241818; /* Color azul para el encabezado */
-  margin-bottom: 20px;
+  color: darkslategrey;
+  margin-bottom: 16px;
 }
 
 ul {
@@ -27,7 +32,7 @@ ul {
 }
 
 li {
-  background-color: #ffffff; /* Fondo blanco para los elementos de la lista */
+  background-color: darkslategrey; /* Fondo blanco para los elementos de la lista */
   margin: 10px 0; /* Espacio entre elementos */
   padding: 10px;
   border-radius: 5px; /* Bordes redondeados */
@@ -38,17 +43,28 @@ li:hover {
   background-color: #e9ecef; /* Color de fondo al pasar el ratón */
 }
 
-/* Estilo de botones básicos */
-button {
-  background-color: #007bff; /* Fondo azul */
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
+#root {
+  background-color: #0b0f17;
 }
 
-button:hover {
-  background-color: #0056b3; /* Fondo azul más oscuro al pasar el ratón */
+/* Estilos de inputs */
+input {
+  border: 1px solid #2a3344;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  background: #0f1522;
+  color: #f3f4f6;
+}
+
+input:focus {
+  border-color: #4b5b7a;
+  box-shadow: 0 0 0 3px rgba(75, 91, 122, 0.45);
+}
+
+@media (min-width: 768px) {
+  .button-54 {
+    padding: 0.25em 0.75em;
+  }
 }
 /* Fin de src/index.css */

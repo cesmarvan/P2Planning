@@ -1,0 +1,212 @@
+.app-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 40px;
+}
+
+#root {
+  background-color: #0b0f17;
+}
+
+body{
+    background-color: #0b0f17;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #f3f4f6;
+  display: flex;
+  align-items: center;
+}
+
+
+.button-54 {
+  all: unset;
+  width: 100px;
+  height: 30px;
+  font-size: 16px;
+  background: transparent;
+  border: none;
+  position: relative;
+  color: #f0f0f0;
+  cursor: pointer;
+  z-index: 1;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.button-54::after,
+.button-54::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: -99999;
+  transition: all .4s;
+}
+
+.button-54::before {
+  transform: translate(0%, 0%);
+  width: 100%;
+  height: 100%;
+  background: #28282d;
+  border-radius: 10px;
+}
+
+.button-54::after {
+  transform: translate(10px, 10px);
+  width: 35px;
+  height: 35px;
+  background: #ffffff15;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border-radius: 50px;
+}
+
+.button-54:hover::before {
+  transform: translate(5%, 20%);
+  width: 110%;
+  height: 110%;
+}
+
+.button-54:hover::after {
+  border-radius: 10px;
+  transform: translate(0, 0);
+  width: 100%;
+  height: 100%;
+}
+
+.button-54:active::after {
+  transition: 0s;
+  transform: translate(0, 5%);
+}
+
+.calendar-toolbar {
+  margin-bottom: 16px;
+}
+
+.new-calendar-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.calendar-card {
+  background: linear-gradient(180deg, #141a26 0%, #0f1522 100%);
+  border: 1px solid #2a3344;
+  border-radius: 16px;
+  padding: 18px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 1 / 1;
+}
+
+.calendar-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b4a66;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.calendar-card-title {
+  margin: 0;
+  font-size: 18px;
+  color: #f9fafb;
+}
+
+.calendar-card-subtitle {
+  margin: 8px 0 0 0;
+  color: #9aa4b2;
+  font-size: 13px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pagination-info {
+  color: #9aa4b2;
+  font-size: 13px;
+}
+
+.new-calendar-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.year-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.year-display {
+  font-weight: 700;
+  font-size: 20px;
+  color: #f3f4f6;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #2a3344;
+  background: #141a26;
+  cursor: pointer;
+  user-select: none;
+}
+
+.year-display:hover {
+  border-color: #3b4a66;
+}
+
+@media (max-width: 960px) {
+  .calendar-grid {
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .calendar-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-grid {
+    grid-template-columns: 1fr;
+  }
+}
