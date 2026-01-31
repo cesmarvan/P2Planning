@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
-import Calendar from "./components/Calendar";
+import { useEffect, useState } from "react";
 import "./App.css";
+import Calendar from "./components/Calendar";
+import getPeerId from './peer';
 
 import { AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
 
 function App({ ditto }) {
   const [calendars, setCalendars] = useState([]);
+  const currentPeerId = getPeerId();
+  const [allEvents, setAllEvents] = useState([]);
 
   console.log("App rendered, ditto:", ditto ? "present" : "missing");
   console.log("Current calendars state:", calendars);
@@ -20,6 +23,17 @@ function App({ ditto }) {
 
     // Registrar subscripción de sync para recibir actualizaciones de otros peers
     ditto.sync.registerSubscription(`SELECT * FROM calendars`);
+
+    // También observar todos los eventos para poder mostrar contadores
+    ditto.sync.registerSubscription(`SELECT * FROM events`);
+
+    const evObserver = ditto.store.registerObserver(
+      `SELECT * FROM events`,
+      (result) => {
+        const events = result.items.map(item => item.value);
+        setAllEvents(events);
+      }
+    );
 
     // Observar cambios locales en calendarios
     const calObserver = ditto.store.registerObserver(
@@ -40,12 +54,16 @@ function App({ ditto }) {
         console.log("Existing calendars on mount:", existing.length);
 
         if (existing.length === 0) {
-          console.log("Creating initial calendar...");
+          console.log("Creating initial calendar for this peer...");
+          // Use a peer-specific id so other peers don't overwrite the same doc on first load
+          const initId = `cal-${currentPeerId}`;
           await ditto.store.collection("calendars").upsert({
-            _id: "cal1",
-            name: "Example calendar"
+            _id: initId,
+            name: "Example calendar",
+            owner: currentPeerId,
+            allowedPeers: [currentPeerId]
           });
-          console.log("Initial calendar created");
+          console.log("Initial calendar created with id:", initId);
         }
       } catch (err) {
         console.error("Error checking/creating initial calendar:", err);
@@ -55,6 +73,7 @@ function App({ ditto }) {
     return () => {
       console.log("Stopping observer");
       calObserver?.stop?.();
+      evObserver?.stop?.();
     };
   }, [ditto]);
 
@@ -64,9 +83,29 @@ function App({ ditto }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 12;
 
-  const totalPages = Math.max(1, Math.ceil(calendars.length / pageSize));
+  // Only show calendars the current peer owns or that include them in allowedPeers
+  const accessibleCalendars = calendars.filter(c => {
+    if (!c) return false;
+    if (c.owner === currentPeerId) return true;
+    if (Array.isArray(c.allowedPeers) && c.allowedPeers.includes(currentPeerId)) return true;
+    return false;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(accessibleCalendars.length / pageSize));
   const pageStart = (currentPage - 1) * pageSize;
-  const visibleCalendars = calendars.slice(pageStart, pageStart + pageSize);
+  const visibleCalendars = accessibleCalendars.slice(pageStart, pageStart + pageSize);
+  // attach upcomingCount to visible calendars
+  const todayStart = new Date();
+  todayStart.setHours(0,0,0,0);
+  const visibleCalendarsWithCount = visibleCalendars.map(c => {
+    const count = allEvents.filter(e => e && e.calendar_id === c._id && (() => {
+      if (!e.date) return false;
+      const d = new Date(e.date);
+      if (isNaN(d)) return false;
+      return d >= todayStart;
+    })()).length;
+    return { ...c, upcomingCount: count };
+  });
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -91,8 +130,11 @@ function App({ ditto }) {
 
   return (
     <div className="app-page">
-      <div className="app-header">
+      <div className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 className="app-title">P2Planning</h1>
+        <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, opacity: 0.95 }} title={`Peer id: ${currentPeerId}`}>
+          {currentPeerId}
+        </div>
       </div>
 
       <div className="calendar-toolbar">
@@ -110,7 +152,9 @@ function App({ ditto }) {
                 try {
                   await ditto.store.collection("calendars").upsert({
                     _id: id,
-                    name: newCalendarName
+                    name: newCalendarName,
+                    owner: currentPeerId,
+                    allowedPeers: [currentPeerId]
                   });
                   console.log("Calendar created successfully");
                   setNewCalendarName("");
@@ -134,12 +178,18 @@ function App({ ditto }) {
       </div>
 
       <div className="calendar-grid">
-        {visibleCalendars.map((c) => (
+        {visibleCalendarsWithCount.map((c) => (
           <div
             key={c._id}
             className="calendar-card"
+            style={{ position: 'relative' }}
             onClick={() => setSelectedCalendar(c)}
           >
+            {c.upcomingCount > 0 && (
+              <div style={{ position: 'absolute', top: 8, right: 8, backgroundColor: '#e11', color: '#fff', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>
+                {c.upcomingCount}
+              </div>
+            )}
             <div>
               <h3 className="calendar-card-title">{c.name}</h3>
               <p className="calendar-card-subtitle">Open calendar</p>

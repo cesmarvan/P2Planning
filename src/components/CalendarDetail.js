@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import getPeerId from '../peer';
 
 function CalendarView({ calendar, ditto }) {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(null);
@@ -6,6 +7,14 @@ function CalendarView({ calendar, ditto }) {
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventDate, setNewEventDate] = useState("");
   const [events, setEvents] = useState([]);
+  const [newPeerId, setNewPeerId] = useState('');
+  const currentPeerId = getPeerId();
+  const [localAllowed, setLocalAllowed] = useState(calendar?.allowedPeers || []);
+
+  // Keep localAllowed in sync when parent calendar prop changes
+  useEffect(() => {
+    setLocalAllowed(calendar?.allowedPeers || []);
+  }, [calendar?.allowedPeers]);
 
   // Observar eventos de este calendario
   useEffect(() => {
@@ -38,6 +47,54 @@ function CalendarView({ calendar, ditto }) {
   return (
     <div>
       <h2 style={{ color: '#f3f4f6', marginTop: 0 }}>{calendar.name}</h2>
+      {/* Access control UI - only visible to owner */}
+      {calendar?.owner === currentPeerId && (
+        <div style={{ marginBottom: 12, padding: 12, border: '1px solid #2a3344', borderRadius: 8, backgroundColor: '#0f1522' }}>
+          <h4 style={{ marginTop: 0, color: '#cbd5f5' }}>Access control</h4>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+            <input placeholder='Peer ID to allow' value={newPeerId} onChange={e => setNewPeerId(e.target.value)} />
+            <button className="button-54" onClick={async () => {
+              if (!newPeerId) return;
+              try {
+                const newAllowed = Array.from(new Set([...(localAllowed || []), newPeerId]));
+                await ditto.store.collection('calendars').upsert({
+                  ...calendar,
+                  allowedPeers: newAllowed
+                });
+                setLocalAllowed(newAllowed);
+                setNewPeerId('');
+              } catch (err) {
+                console.error('Failed to add allowed peer (upsert):', err);
+                alert('Error adding peer: ' + err.message);
+              }
+            }}>Add peer</button>
+          </div>
+          <div>
+            <strong style={{ color: '#9aa4b2' }}>Allowed peers:</strong>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+              {localAllowed.map((p) => (
+                <div key={p} style={{ padding: '6px 8px', backgroundColor: '#141a26', borderRadius: 8, border: '1px solid #2a3344', display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ color: '#e5e7eb' }}>{p}</span>
+                  <button className="button-54" onClick={async () => {
+                    try {
+                      const newAllowed = (localAllowed || []).filter(x => x !== p);
+                      await ditto.store.collection('calendars').upsert({
+                        ...calendar,
+                        allowedPeers: newAllowed
+                      });
+                      setLocalAllowed(newAllowed);
+                    } catch (err) {
+                      console.error('Failed to remove allowed peer (upsert):', err);
+                      alert('Error removing peer: ' + err.message);
+                    }
+                  }}>Remove</button>
+                </div>
+              ))}
+              {(localAllowed || []).length === 0 && <div style={{ color: '#9aa4b2' }}>No peers allowed yet.</div>}
+            </div>
+          </div>
+        </div>
+      )}
       {selectedMonthIndex === null ? (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>

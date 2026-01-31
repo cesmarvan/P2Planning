@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AiTwotoneEdit, AiTwotoneDelete, AiOutlineCheck, AiOutlineClose} from 'react-icons/ai';
+import { useEffect, useState } from 'react';
+import { AiOutlineCheck, AiOutlineClose, AiTwotoneDelete } from 'react-icons/ai';
 function EventManager({ calendar, ditto }) {
   const [events, setEvents] = useState([]);
   const [showAddEvent, setShowAddEvent] = useState(false);
@@ -62,8 +62,8 @@ function EventManager({ calendar, ditto }) {
   const handleDeleteEvent = async (eventId) => {
     try {
       console.log("Deleting event:", eventId);
-      await ditto.store.collection("events").findByID(eventId).remove();
-      console.log("Event deleted successfully");
+      await ditto.store.execute(`DELETE FROM events WHERE _id = '${eventId}'`);
+      console.log("Event deleted successfully (DQL)");
     } catch (err) {
       console.error('Failed to delete event:', err);
       alert("Error deleting event: " + err.message);
@@ -74,10 +74,14 @@ function EventManager({ calendar, ditto }) {
   const handleUpdateEvent = async (eventId, updates) => {
     try {
       console.log("Updating event:", eventId, updates);
-      await ditto.store.collection("events").findByID(eventId).update((mutableDoc) => {
-        Object.assign(mutableDoc, updates);
+      // Try to merge with existing event in local state if available
+      const existing = events.find(ev => ev._id === eventId) || {};
+      await ditto.store.collection("events").upsert({
+        ...existing,
+        ...updates,
+        _id: eventId
       });
-      console.log("Event updated successfully");
+      console.log("Event updated successfully (upsert)");
     } catch (err) {
       console.error('Failed to update event:', err);
       alert("Error updating event: " + err.message);
